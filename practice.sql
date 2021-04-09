@@ -1,4 +1,4 @@
-ouSELECT good, (unit_price*amount) AS sum  FROM Payments
+SELECT good, (unit_price*amount) AS sum  FROM Payments
 WHERE good = (
     SELECT good from Goods
     WHERE good = good_id
