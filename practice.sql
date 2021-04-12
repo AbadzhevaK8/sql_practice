@@ -1,3 +1,28 @@
+#01
+SELECT name FROM Passenger;
+===========================================================
+#02
+SELECT name FROM Company;
+===========================================================
+#03
+SELECT * FROM Trip
+WHERE town_from='Moscow';
+===========================================================
+
+===========================================================
+
+===========================================================
+
+===========================================================
+
+===========================================================
+
+===========================================================
+
+===========================================================
+
+===========================================================
+
 SELECT good, (unit_price*amount) AS sum  FROM Payments
 WHERE good = (
     SELECT good from Goods
@@ -239,6 +264,10 @@ SELECT classroom FROM Schedule
 GROUP BY classroom
 ORDER BY COUNT(classroom) DESC
 LIMIT 0, 2;
+======================
+SELECT max(count) FROM
+  (SELECT COUNT(*) as count FROM Schedule
+  GROUP BY classroom) as tbl;
 ===========================================================
 #46
 SELECT name FROM Class
@@ -349,6 +378,31 @@ HAVING EXISTS
         Group by Teacher
         HAVING COUNT(*) >= '1')
 Order by Teacher;
+============================
+SELECT DISTINCT teacher
+FROM
+  (SELECT teacher
+  FROM Schedule JOIN Class
+  ON Schedule.class = Class.id
+  WHERE Class.name = '11 A') i8
+WHERE EXISTS
+(SELECT Teacher
+  FROM Schedule JOIN Class
+  ON Schedule.class = Class.id
+  WHERE Class.name = '11 B'
+  AND teacher = i8.teacher)
+
+============================
+SELECT teacher
+FROM Schedule
+WHERE class IN
+  (SELECT id FROM Class
+  WHERE name LIKE '11%')
+GROUP BY teacher
+HAVING count(DISTINCT class) >=
+  (SELECT COUNT(DISTINCT id)
+  FROM Class
+  WHERE name LIKE '11%')
 ===========================================================
 #61
 SELECT Rooms.* FROM Rooms
@@ -375,6 +429,78 @@ ORDER BY name;
 
 ===========================================================
 #64
+select
 
+case when pas1id < pas2id then passengerName1
+else passengerName2 end as passengerName1,
+
+case when pas1id > pas2id then passengerName2
+else passengerName1 end as passengerName2,
+count
+
+from ( pas1.name as passengerName1,
+pas2.name as passengerName2,
+pas1.id as pas1id,
+pas2.id as pas2id,
+count(p1.trip) as count
 
 ===========================================================
+SELECT
+FROM Pass_in_trip
+INNER JOIN Passenger
+ON Pass_in_trip.passenger=Passenger.id AS B
+ON A.trip=B.trip
+AND  A.passenger<B.passenger
+GROUP BY pass
+
+----------------
+
+SELECT
+pas1.name AS passengerName1,
+pas2.name AS passengerName2,
+COUNT(p1.trip) AS count
+FROM Pass_in_trip
+INNER JOIN Passenger
+ON Pass_in_trip.passenger=Passenger.id AS B
+ON A.trip=B.trip
+AND  A.passenger<B.passenger
+GROUP BY pass
+
+
+
+SELECT
+pas1.name AS passengerName1,
+pas2.name AS passengerName2,
+COUNT(p1.trip) AS count
+FROM Pass_in_trip p1
+WHERE p1.passenger<p2.passenger
+
+
+--------------------------------------
+
+select
+  p.name as passengerName1,
+  p2.name as passengerName2, count from (
+
+    select
+    pas1.id as pas1_id,
+    pas2.id as pas2_id,
+    count(p1.trip) as count
+
+    from
+    pass_in_trip p1
+    inner join pass_in_trip p2 on p1.trip = p2.trip
+    inner join passenger pas1 on p1.passenger = pas1.id
+    inner join passenger pas2 on p2.passenger = pas2.id
+    group by pas1.id, pas2.id
+    having count(distinct p1.trip) >=2
+    order by pas1.id asc
+
+  ) k
+
+inner join passenger p on p .id = pas1_id
+inner join passenger p2 on p2.id = pas2_id
+where p.name < p2.name
+
+
+-------------------------------------------------
