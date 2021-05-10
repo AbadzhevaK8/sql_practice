@@ -1,46 +1,5 @@
-#01
-SELECT name FROM Passenger;
 ===========================================================
-#02
-SELECT name FROM Company;
-===========================================================
-#03
-SELECT * FROM Trip
-WHERE town_from='Moscow';
-===========================================================
-
-===========================================================
-
-===========================================================
-
-===========================================================
-
-===========================================================
-
-===========================================================
-
-===========================================================
-
-===========================================================
-
-SELECT good, (unit_price*amount) AS sum  FROM Payments
-WHERE good = (
-    SELECT good from Goods
-    WHERE good = good_id
-) ORDER BY sum DESC;
-===========================================================
-SELECT good, (unit_price*amount) AS sum
-FROM Payments, Goods
-WHERE Payments.good = Goods.good_id
-ORDER BY sum DESC;
-===========================================================
-SELECT * FROM FamilyMembers
-WHERE member_name LIKE '% Quincey'
-ORDER BY status,member_name;
-===========================================================
-SELECT COUNT(plane) AS count FROM Trip
-WHERE plane='TU-154'
-GROUP BY plane;
+Tutorial
 ===========================================================
 SELECT class, COUNT(student) AS count
 FROM Student_in_class
@@ -71,14 +30,82 @@ SELECT (SELECT COUNT(trip)
 FROM Passenger
 ORDER BY count DESC;
 ===========================================================
-SELECT town_to, SEC_TO_TIME(TIMESTAMPDIFF(second, time_out, time_in)) AS flight_time
-FROM Trip
-WHERE town_from='Paris';
-===========================================================
 SELECT time_in FROM Trip
 JOIN Pass_in_trip ON Trip.id=Pass_in_trip.trip
 JOIN Passenger ON Pass_in_trip.passenger=Passenger.id
 WHERE name='Steve Martin' AND town_to='London';
+===========================================================
+SELECT good, (unit_price*amount) AS sum  FROM Payments
+WHERE good = (
+    SELECT good from Goods
+    WHERE good = good_id
+) ORDER BY sum DESC;
+===========================================================
+SELECT good, (unit_price*amount) AS sum
+FROM Payments, Goods
+WHERE Payments.good = Goods.good_id
+ORDER BY sum DESC;
+===========================================================
+SELECT * FROM FamilyMembers
+WHERE member_name LIKE '% Quincey'
+ORDER BY status,member_name;
+===========================================================
+Exercises
+===========================================================
+#01
+SELECT name FROM Passenger;
+===========================================================
+#02
+SELECT name FROM Company;
+===========================================================
+#03
+SELECT * FROM Trip
+WHERE town_from='Moscow';
+===========================================================
+#04
+SELECT name FROM Passenger
+WHERE name LIKE '%man';
+===========================================================
+#05
+SELECT COUNT(plane) AS count FROM Trip
+WHERE plane='TU-154';
+===========================================================
+#06
+SELECT name FROM Company
+JOIN Trip ON Company.id=Trip.company
+WHERE plane='Boeing'
+GROUP BY name;
+===========================================================
+#07
+SELECT plane FROM Trip
+WHERE town_to='Moscow'
+GROUP BY plane;
+===========================================================
+#08
+SELECT town_to, SEC_TO_TIME(TIMESTAMPDIFF(second, time_out, time_in)) AS flight_time
+FROM Trip
+WHERE town_from='Paris';
+===========================================================
+#09
+SELECT name FROM Company
+JOIN Trip ON Trip.company=Company.id
+WHERE town_from='Vladivostok';
+===========================================================
+#10
+SELECT * FROM Trip
+WHERE time_out >= '1900-01-01T10:00:00.000Z'
+    AND time_out <= '1900-01-01T14:00:00.000Z';
+===========================================================
+#11
+SELECT name
+FROM Passenger
+ORDER BY CHAR_LENGTH(name) DESC
+LIMIT 0, 1;
+===========================================================
+#12
+SELECT trip, COUNT(passenger) AS count
+FROM Pass_in_trip
+GROUP BY trip;
 ===========================================================
 #13
 SELECT DISTINCT name FROM Passenger
@@ -429,78 +456,47 @@ ORDER BY name;
 
 ===========================================================
 #64
-select
 
-case when pas1id < pas2id then passengerName1
-else passengerName2 end as passengerName1,
-
-case when pas1id > pas2id then passengerName2
-else passengerName1 end as passengerName2,
-count
-
-from ( pas1.name as passengerName1,
-pas2.name as passengerName2,
-pas1.id as pas1id,
-pas2.id as pas2id,
-count(p1.trip) as count
+WITH newTab1 AS(
+  SELECT passenger.id, trip, name AS passengerName1
+  FROM pass_in_trip
+  JOIN passenger ON passenger.id = pass_in_trip.passenger
+  GROUP BY trip, passenger),
+newTab2 AS(
+  SELECT passenger.id, trip, name AS passengerName2
+  FROM pass_in_trip
+  JOIN passenger ON passenger.id = pass_in_trip.passenger
+  GROUP BY trip, passenger)
+SELECT newTab1.passengerName1, newTab2.passengerName2, count(*) AS count
+FROM newTab1, newTab2
+WHERE newTab2.trip = newTab1.trip AND newTab2.passengerName2 != newTab1.passengerName1 AND newTab1.id < newTab2.id
+GROUP BY newTab1.passengerName1, newTab2.passengerName2
+HAVING count >1
+===========================================================
+#65
+SELECT room_id, FLOOR(AVG(rating)) AS rating
+FROM Reservations
+JOIN Reviews ON Reviews.reservation_id=Reservations.id
+GROUP BY room_id;
+===========================================================
+#66
+SELECT  home_type,
+    address,
+    IFNULL(SUM(dateDIFF(end_date, start_date)) ,0) AS days,
+    IFNULL(SUM(dateDIFF(end_date, start_date)*Reservations.price) , 0) AS total_fee
+FROM Rooms
+LEFT OUTER JOIN Reservations ON Reservations.room_id = Rooms.id
+WHERE has_tv=1 AND has_internet=1 AND has_kitchen=1 AND has_air_con=1
+GROUP BY address, home_type;
 
 ===========================================================
-SELECT
-FROM Pass_in_trip
-INNER JOIN Passenger
-ON Pass_in_trip.passenger=Passenger.id AS B
-ON A.trip=B.trip
-AND  A.passenger<B.passenger
-GROUP BY pass
-
-----------------
-
-SELECT
-pas1.name AS passengerName1,
-pas2.name AS passengerName2,
-COUNT(p1.trip) AS count
-FROM Pass_in_trip
-INNER JOIN Passenger
-ON Pass_in_trip.passenger=Passenger.id AS B
-ON A.trip=B.trip
-AND  A.passenger<B.passenger
-GROUP BY pass
-
-
-
-SELECT
-pas1.name AS passengerName1,
-pas2.name AS passengerName2,
-COUNT(p1.trip) AS count
-FROM Pass_in_trip p1
-WHERE p1.passenger<p2.passenger
-
-
---------------------------------------
-
-select
-  p.name as passengerName1,
-  p2.name as passengerName2, count from (
-
-    select
-    pas1.id as pas1_id,
-    pas2.id as pas2_id,
-    count(p1.trip) as count
-
-    from
-    pass_in_trip p1
-    inner join pass_in_trip p2 on p1.trip = p2.trip
-    inner join passenger pas1 on p1.passenger = pas1.id
-    inner join passenger pas2 on p2.passenger = pas2.id
-    group by pas1.id, pas2.id
-    having count(distinct p1.trip) >=2
-    order by pas1.id asc
-
-  ) k
-
-inner join passenger p on p .id = pas1_id
-inner join passenger p2 on p2.id = pas2_id
-where p.name < p2.name
-
-
--------------------------------------------------
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
